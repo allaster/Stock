@@ -1,0 +1,18 @@
+require(quantmod)
+ticker=as.matrix(read.table("ticker.txt"))
+res=matrix(0,ncol=50,nrow=50000)
+for (j in (1:nrow(ticker)))
+{
+rawdata=getSymbols(ticker[j,],from = "2010-01-01",auto.assign=FALSE)
+closeprice=rawdata[,6]
+n=1:nrow(closeprice)
+price=as.vector(closeprice)
+dat=cbind(n,price)
+for (i in (11:(nrow(closeprice)-10)))
+{
+range=dat[(i-10):(10+i),2]
+ifelse(dat[i,1] == (i-11 + which.max(range)),res[i,(j*2-1):(j*2)] <- dat[i,1:2],NA)
+}
+}
+
+write.csv(res,"peak.csv")
