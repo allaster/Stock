@@ -1,0 +1,31 @@
+require(quantmod)
+require(tseries)
+ticker = as.matrix(read.table("ticker.txt")) 
+startdate = "2014-01-01" 
+enddate = "2015-01-01" 
+rawSPX = getSymbols('^GSPC',from = startdate,to = enddate, auto.assign=FALSE) 
+adjcloseSPX = rawSPX[,6]
+res = matrix(0,ncol = nrow(ticker), nrow= nrow(adjcloseSPX))
+for (i in 1:nrow(ticker)) 
+{
+rawdata=getSymbols(ticker[i,],from = startdate,to = enddate, auto.assign=FALSE) 
+rawadj.close=rawdata[,6] 
+adj.close=as.matrix(rawadj.close,ncol=1)
+res[,i]=adj.close
+}
+rmat=diff(log(res),lag=1) 
+
+# portfolio.optim(x, pm = mean(x), riskless = FALSE,
+#                shorts = FALSE, rf = 0.0, reslow = NULL, reshigh = NULL,
+#                covmat = cov(x), ...)
+
+weight_low = rep(0.05,nrow(ticker)) 
+weight_high = rep(0.5,nrow(ticker)) 
+
+res <- portfolio.optim(rmat,reslow = weight_low,reshigh = weight_high) 
+res$pw
+res$pm
+res$ps
+tickerstr = c(t(ticker))
+result = rbind(tickerstr,res$pw)
+write.csv(result,"weight.csv")
