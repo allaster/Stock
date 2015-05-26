@@ -1,0 +1,16 @@
+require(quantmod)
+ticker = as.matrix(read.table("ticker.txt"))
+startdate = "1950-01-01"
+res = matrix(0,ncol = nrow(ticker), nrow=1)
+for (i in 1:nrow(ticker))
+{
+rawdata=getSymbols(ticker[i,],from = startdate, auto.assign=FALSE)
+rawadj.close.first.day=rawdata[1,6]
+rawadj.close.last.day=rawdata[nrow(rawdata),6]
+CAGR=(as.numeric(rawadj.close.last.day)/as.numeric(rawadj.close.first.day))^(1/(nrow(rawdata)/252))-1
+res[1,i]=CAGR
+}
+tickerstr = c(t(ticker))
+result = rbind(tickerstr,res)
+write.csv(result,"CAGR.csv")
+
