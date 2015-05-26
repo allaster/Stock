@@ -1,0 +1,42 @@
+require(quantmod)
+ticker = as.matrix(read.table("ticker.txt"))
+startdate = "2014-01-01"
+rawSPX = getSymbols('^GSPC',from = startdate, auto.assign=FALSE)
+adjcloseSPX = rawSPX[,6]
+res = matrix(0,ncol = nrow(ticker), nrow= nrow(adjcloseSPX))
+for (i in 1:nrow(ticker))
+{
+  rawdata=getSymbols(ticker[i,],from = startdate, auto.assign=FALSE)
+  rawadj.close=rawdata[,6]
+  adj.close=as.matrix(rawadj.close,ncol=1)
+  res[,i]=adj.close
+}
+adjcloseSPX = matrix(adjcloseSPX,ncol =1)
+resdatwithSPX = cbind(res,adjcloseSPX)
+tickerstr = c(t(ticker),"SPX")
+result = rbind(tickerstr,resdatwithSPX)
+head(adj.close)
+res.NA=matrix(as.numeric(result),nrow=nrow(result))
+datatotestMDD=res.NA[-1,]
+MDDRes = matrix(0,ncol=ncol(datatotestMDD),nrow=3)
+MDDRes[1,] = result[1,]
+for (j in 1:ncol(datatotestMDD))
+{
+MDD = 0 # Maximum Drag Down
+MDDD = 0 # Maximum Daily Drag Down
+peak = -9999
+for (k in 1:nrow(datatotestMDD))
+{
+  ifelse(datatotestMDD[k,j] > peak, peak <- datatotestMDD[k,j],NA)
+DD=rep(0,nrow(datatotestMDD))
+DD[k]=(peak-datatotestMDD[k,j])/peak
+DDD=rep(0,nrow(row(datatotestMDD)))
+ifelse(k>1,DDD[k]<--(datatotestMDD[k,j]/datatotestMDD[k-1,j]-1),NA)
+ifelse(DD[k]>MDD,MDD <- DD[k],NA)
+ifelse(DDD[k]>MDDD,MDDD <- DDD[k],NA)
+}
+MDDRes[2,j] <- MDD
+MDDRes[3,j] <- MDDD
+}
+
+write.csv(MDDRes,"MDD.csv")
